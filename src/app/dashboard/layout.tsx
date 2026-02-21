@@ -5,8 +5,8 @@ import { Sidebar } from "@/components/ui/Sidebar";
 import { ChevronRight, Bell, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
-import { logout } from "@/app/auth/actions";
 import { UserProvider, useUser } from "@/context/UserContext";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 export default function DashboardLayout({
     children,
@@ -26,7 +26,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-[#030303] text-white flex overflow-hidden font-sans relative">
+        <div className="h-screen bg-[#030303] text-white flex overflow-hidden font-sans relative">
             {/* Background Grid */}
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute inset-0 bg-grid-subtle [mask-image:linear-gradient(to_bottom,black,transparent)] opacity-40" />
@@ -99,12 +99,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                                                     Billing & Usage
                                                 </button>
                                                 <div className="h-px bg-white/5 my-1" />
-                                                <form action={logout}>
-                                                    <button type="submit" className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/5 rounded-lg transition-colors group">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500/20 group-hover:bg-rose-500 transition-colors" />
-                                                        Logout
-                                                    </button>
-                                                </form>
+                                                <LogoutButton />
                                             </div>
                                         </motion.div>
                                     </>

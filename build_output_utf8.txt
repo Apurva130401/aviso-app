@@ -1,0 +1,251 @@
+﻿
+> aviso-app@0.1.0 build
+> next build
+
+node.exe : ΓÜá Warning: Next.js inferred your 
+workspace root, but it may not be correct.
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ΓÜá     
+Warning: Ne...not be correct.:String) [], Rem    
+oteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ We detected multiple lockfiles and selected the 
+directory of C:\Users\Apurva\package-lock.json as the 
+root directory.
+ To silence this warning, set `turbopack.root` in your 
+Next.js config, or consider removing one of the 
+lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config
+/next-config-js/turbopack#root-directory for more 
+information.
+ Detected additional lockfiles: 
+   * C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso 
+App\package-lock.json
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+ΓÜá The "middleware" file convention is deprecated. 
+Please use "proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 2 errors:
+./Desktop/SyncFlo-Files/Aviso 
+App/src/components/ui/Sidebar.tsx
+Error evaluating Node.js code
+SyntaxError: 
+C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso 
+App\src\components\ui\Sidebar.tsx: Identifier 
+'usePathname' has already been declared. (10:9)
+
+[0m [90m  8 |[39m [36mimport[39m [33mLink[39m 
+[36mfrom[39m [32m"next/link"[39m[33m;[39m
+ [90m  9 |[39m [36mimport[39m { usePathname } 
+[36mfrom[39m [32m"next/navigation"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 10 |[39m [36mimport[39m { 
+usePathname[33m,[39m useRouter } [36mfrom[39m 
+[32m"next/navigation"[39m[33m;[39m
+ [90m    |[39m          [31m[1m^[22m[39m
+ [90m 11 |[39m [36mimport[39m { useUser } 
+[36mfrom[39m 
+[32m"@/context/UserContext"[39m[33m;[39m
+ [90m 12 |[39m
+ [90m 13 |[39m [36mexport[39m [36mconst[39m 
+[33mSidebar[39m [33m=[39m ({ isOpen[33m,[39m 
+onToggle }[33m:[39m { isOpen[33m:[39m 
+boolean[33m;[39m onToggle[33m:[39m () [33m=>[39m 
+[36mvoid[39m }) [33m=>[39m {[0m
+    [at constructor 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:137105)]
+    [at TypeScriptParserMixin.raise 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:194164)]
+    [at TypeScriptScopeHandler.declareName 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:270924)]
+    [at 
+TypeScriptParserMixin.declareNameFromIdentifier 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:279226)]
+    [at TypeScriptParserMixin.checkIdentifier 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:279152)]
+    [at TypeScriptParserMixin.checkLVal 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:278197)]
+    [at TypeScriptParserMixin.finishImportSpecifier 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:422705)]
+    [at TypeScriptParserMixin.parseImportSpecifier 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:425882)]
+    [at TypeScriptParserMixin.parseImportSpecifier 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:338125)]
+    [at 
+TypeScriptParserMixin.parseNamedImportSpecifiers 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:425483)]
+    [at 
+TypeScriptParserMixin.parseImportSpecifiersAndAfter 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:422062)]
+    [at TypeScriptParserMixin.parseImport 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:421803)]
+    [at TypeScriptParserMixin.parseImport 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:322073)]
+    [at TypeScriptParserMixin.parseStatementContent 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:391781)]
+    [at TypeScriptParserMixin.parseStatementContent 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:324042)]
+    [at TypeScriptParserMixin.parseStatementLike 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:389494)]
+    [at TypeScriptParserMixin.parseModuleItem 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:389055)]
+    [at 
+TypeScriptParserMixin.parseBlockOrModuleBlockBody 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:401400)]
+    [at TypeScriptParserMixin.parseBlockBody 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:401223)]
+    [at TypeScriptParserMixin.parseProgram 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:386857)]
+    [at TypeScriptParserMixin.parseTopLevel 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:386575)]
+    [at TypeScriptParserMixin.parse 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:426834)]
+    [at TypeScriptParserMixin.parse 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:337631)]
+    [at parse 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:191:427092)]
+    [at parser 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:1:142018)]
+    [at <anonymous>]
+    [at normalizeFile 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\compiled\babel\bundle.js:13:13275)]
+    [at <anonymous>]
+    [at consumeIterator 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\build\babel\loader\util.js:13:38)]
+    [at transform 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\build\babel\loader\transform.js:89:44)
+]
+    [at async 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\build\babel\loader\index.js:36:108)]
+    at async DummySpan.traceAsyncFn (turbopack:///[turb
+opack-node]/transforms/webpack-loaders.ts:115:12) 
+[C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\.next\
+build\chunks\[root-of-the-server]__6e020478._.js:126:16
+]
+    [at async nextBabelLoader 
+(C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\node_m
+odules\next\dist\build\babel\loader\index.js:36:63)]
+    at async DummySpan.traceAsyncFn (turbopack:///[turb
+opack-node]/transforms/webpack-loaders.ts:115:12) 
+[C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\.next\
+build\chunks\[root-of-the-server]__6e020478._.js:126:16
+]
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/components/ui/Sidebar.tsx [Client Component 
+Browser]
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/app/dashboard/layout.tsx [Client Component 
+Browser]
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/app/dashboard/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/components/ui/Sidebar.tsx [Client Component 
+SSR]
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/app/dashboard/layout.tsx [Client Component SSR]
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/app/dashboard/layout.tsx [Server Component]
+
+
+./Desktop/SyncFlo-Files/Aviso 
+App/src/components/ui/Sidebar.tsx:10:10
+Ecmascript file had an error
+[0m [90m  8 |[39m [36mimport[39m [33mLink[39m 
+[36mfrom[39m [32m"next/link"[39m[33m;[39m
+ [90m  9 |[39m [36mimport[39m { usePathname } 
+[36mfrom[39m [32m"next/navigation"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 10 |[39m [36mimport[39m { 
+usePathname[33m,[39m useRouter } [36mfrom[39m 
+[32m"next/navigation"[39m[33m;[39m
+ [90m    |[39m          [31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+ [90m 11 |[39m [36mimport[39m { useUser } 
+[36mfrom[39m 
+[32m"@/context/UserContext"[39m[33m;[39m
+ [90m 12 |[39m
+ [90m 13 |[39m [36mexport[39m [36mconst[39m 
+[33mSidebar[39m [33m=[39m ({ isOpen[33m,[39m 
+onToggle }[33m:[39m { isOpen[33m:[39m 
+boolean[33m;[39m onToggle[33m:[39m () [33m=>[39m 
+[36mvoid[39m }) [33m=>[39m {[0m
+
+the name `usePathname` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/components/ui/Sidebar.tsx [Client Component 
+Browser]
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/app/dashboard/layout.tsx [Client Component 
+Browser]
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/app/dashboard/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/components/ui/Sidebar.tsx [Client Component 
+SSR]
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/app/dashboard/layout.tsx [Client Component SSR]
+    ./Desktop/SyncFlo-Files/Aviso 
+App/src/app/dashboard/layout.tsx [Server Component]
+
+
+    at async DummySpan.traceAsyncFn (turbopack:///[turb
+opack-node]/transforms/webpack-loaders.ts:115:12) 
+[C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\.next\
+build\chunks\[root-of-the-server]__6e020478._.js:126:16
+])
+    at async DummySpan.traceAsyncFn (turbopack:///[turb
+opack-node]/transforms/webpack-loaders.ts:115:12) 
+[C:\Users\Apurva\Desktop\SyncFlo-Files\Aviso App\.next\
+build\chunks\[root-of-the-server]__6e020478._.js:126:16
+])
+    at <unknown> (./Desktop/SyncFlo-Files/Aviso 
+App/src/components/ui/Sidebar.tsx:10:10)

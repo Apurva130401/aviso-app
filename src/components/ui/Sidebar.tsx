@@ -6,11 +6,19 @@ import { LayoutGrid, Plus, History, Briefcase, Palette, Settings, HelpCircle, Lo
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-
+import { usePathname, useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 
 export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) => {
     const pathname = usePathname();
+    const router = useRouter();
+    const { profile } = useUser();
+
+    // Default to a small amount if profile not fully loaded yet to avoid ugly NaN
+    const creditsUsed = profile?.credits_used || 0;
+    const creditsTotal = profile?.credits_total || 100;
+    const usagePercent = Math.min(100, (creditsUsed / creditsTotal) * 100);
+
     return (
         <aside
             className={cn(
@@ -45,17 +53,25 @@ export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
                     <div className="bg-white/[0.03] backdrop-blur-md border border-white/[0.05] rounded-[24px] p-5">
                         <div className="flex items-center justify-between mb-3">
                             <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Resource Usage</p>
-                            <p className="text-[10px] font-bold text-white">12 / 50</p>
+                            <p className="text-[10px] font-bold text-white">{creditsUsed} / {creditsTotal}</p>
                         </div>
                         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-4">
                             <motion.div
                                 initial={{ width: 0 }}
-                                animate={{ width: "24%" }}
+                                animate={{ width: `${usagePercent}%` }}
                                 className="h-full bg-gradient-to-r from-accent to-primary"
                             />
                         </div>
-                        <Button className="w-full h-10" variant="primary" size="sm">
-                            Upgrade Plan
+                        <Button
+                            className="w-full h-10 tracking-widest uppercase text-[10px] font-black"
+                            variant="primary"
+                            size="sm"
+                            onClick={() => {
+                                router.push('/dashboard/billing');
+                                if (window.innerWidth < 1024) onToggle();
+                            }}
+                        >
+                            Top Up Credits
                         </Button>
                     </div>
                 </div>

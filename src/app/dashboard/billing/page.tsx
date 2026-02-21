@@ -32,35 +32,36 @@ export default function BillingPage() {
         loadData();
     }, []);
 
-    const handleUpgrade = async (planName: string) => {
-        if (planName === 'Starter') return;
-
-        setProcessingPlan(planName);
+    const handleTopUp = async (packageId: string) => {
+        setProcessingPlan(packageId);
         try {
-            const { key } = await (await import("@/app/auth/billing")).getRazorpayKeyAction();
-            const result = await createSubscriptionAction(planName);
+            const res = await fetch("/api/billing/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ packageId })
+            });
 
-            if (result.success && result.subscriptionId) {
+            const data = await res.json();
+
+            if (data.success && data.orderId) {
                 const options = {
-                    key: key,
-                    subscription_id: result.subscriptionId,
+                    key: data.key,
+                    amount: data.amount,
+                    currency: data.currency,
                     name: "Aviso App",
-                    description: `${planName} Subscription`,
+                    description: "Neural Credits Top-up",
+                    order_id: data.orderId,
                     handler: function (response: any) {
-                        alert("Payment successful! Your plan will be updated shortly.");
+                        alert("Payment successful! Credits will be added momentarily.");
                         window.location.reload();
                     },
-                    prefill: {
-                        email: profile?.email || "",
-                    },
-                    theme: {
-                        color: "#FFFFFF",
-                    },
+                    prefill: { email: profile?.email || "" },
+                    theme: { color: "#FFFFFF" },
                 };
                 const rzp = new window.Razorpay(options);
                 rzp.open();
             } else {
-                alert("Error creating subscription: " + result.error);
+                alert("Error initializing payment: " + data.error);
             }
         } catch (error) {
             console.error("Payment Error:", error);
@@ -69,10 +70,10 @@ export default function BillingPage() {
         }
     };
 
-    const plans = [
-        { name: "Starter", price: "$0", features: ["1,000 Credits/mo", "Basic Neural Nodes", "Standard Support"], current: profile?.planTier === 'Starter' },
-        { name: "Pro", price: "$49", features: ["15,000 Credits/mo", "Advanced Neural Sync", "Priority Support", "Custom Brand Models"], current: profile?.planTier === 'Pro' },
-        { name: "Enterprise", price: "Custom", features: ["Unlimited Credits", "Dedicated Infrastructure", "24/7 Neural Audit", "On-prem Deployment"], current: profile?.planTier === 'Enterprise' },
+    const topUpPackages = [
+        { id: "small_topup", name: "Starter Refill", price: "$10", credits: "1000 Credits", features: ["1 Text-only Campaign", "Basic Email Support"] },
+        { id: "medium_topup", name: "Pro Refill", price: "$25", credits: "2500 Credits", features: ["Ideal for Image Gen", "Priority Queue", "Email Support"], bestValue: true },
+        { id: "large_topup", name: "Agency Bulk", price: "$50", credits: "6000 Credits", features: ["Maximum Margin", "Dedicated Rep", "24/7 Support"] },
     ];
 
     const invoices = [
@@ -85,10 +86,10 @@ export default function BillingPage() {
 
             <div>
                 <h1 className="text-3xl font-black tracking-tight text-white mb-2">
-                    Billing & <span className="text-accent italic">Subscriptions</span>
+                    Billing & <span className="text-accent italic">Credit Top-ups</span>
                 </h1>
                 <p className="text-sm text-white/40 font-medium tracking-wide">
-                    Manage your neural credits, subscription tiers, and financial operations.
+                    Manage your neural credits on a pay-as-you-go basis. No monthly commitments.
                 </p>
             </div>
 
@@ -96,28 +97,31 @@ export default function BillingPage() {
             <Card className="p-8 bg-white/[0.03] border-white/5 rounded-[32px] overflow-hidden relative group">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
                     <div className="space-y-1">
-                        <h3 className="text-lg font-black text-white tracking-tight">Neural Credit Usage</h3>
-                        <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">Workspace 01 / {profile?.planTier || 'Starter'} Tier</p>
+                        <h3 className="text-lg font-black text-white tracking-tight">Neural Credit Balance</h3>
+                        <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">Workspace 01 / Pay-As-You-Go</p>
                     </div>
                     <div className="flex-1 max-w-md space-y-3">
                         <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
                             <span className="text-primary">{profile?.creditsUsed || 0} Used</span>
-                            <span className="text-white/20">{profile?.creditsTotal || 1000} Total</span>
+                            <span className="text-white/20">{profile?.creditsTotal || 100} Total</span>
                         </div>
                         <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
-                                animate={{ width: `${Math.min(100, ((profile?.creditsUsed || 0) / (profile?.creditsTotal || 1000)) * 100)}%` }}
+                                animate={{ width: `${Math.min(100, ((profile?.creditsUsed || 0) / (profile?.creditsTotal || 100)) * 100)}%` }}
                                 transition={{ duration: 1, ease: "easeOut" }}
                                 className="h-full bg-gradient-to-r from-primary to-accent"
                             />
                         </div>
+                        <div className="flex justify-between text-[10px] font-bold text-white/30">
+                            <span>Balance: {(profile?.creditsTotal || 100) - (profile?.creditsUsed || 0)}</span>
+                        </div>
                     </div>
                     <Button
-                        onClick={() => handleUpgrade('Pro')}
+                        onClick={() => document.getElementById('topup-section')?.scrollIntoView({ behavior: 'smooth' })}
                         className="h-11 px-6 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-accent transition-colors"
                     >
-                        Buy Credits <Plus className="ml-2 w-3.5 h-3.5" />
+                        Top Up Credits <Plus className="ml-2 w-3.5 h-3.5" />
                     </Button>
                 </div>
                 <div className="absolute top-0 right-0 p-8 text-primary/10 -rotate-12 translate-x-4 -translate-y-4">
@@ -126,27 +130,28 @@ export default function BillingPage() {
             </Card>
 
             {/* Plans */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {plans.map((plan, i) => (
+            <div id="topup-section" className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {topUpPackages.map((pkg, i) => (
                     <Card key={i} className={cn(
                         "p-8 bg-[#0a0a0a]/40 border-white/5 rounded-[40px] flex flex-col space-y-8 relative group hover:border-white/10 transition-all",
-                        plan.current && "border-primary/20 bg-primary/5"
+                        pkg.bestValue && "border-primary/20 bg-primary/5"
                     )}>
-                        {plan.current && (
+                        {pkg.bestValue && (
                             <div className="absolute top-4 right-8 bg-primary text-black text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full">
-                                Active Plan
+                                Best Value
                             </div>
                         )}
                         <div>
-                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-2">{plan.name}</p>
+                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-2">{pkg.name}</p>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-3xl font-black text-white tracking-tighter">{plan.price}</span>
-                                {plan.price !== "Custom" && <span className="text-xs text-white/20 font-bold">/mo</span>}
+                                <span className="text-3xl font-black text-white tracking-tighter">{pkg.price}</span>
+                                <span className="text-xs text-white/20 font-bold">one-time</span>
                             </div>
+                            <div className="mt-2 text-primary font-bold text-sm tracking-wide">{pkg.credits}</div>
                         </div>
 
                         <ul className="flex-1 space-y-4">
-                            {plan.features.map((feat, j) => (
+                            {pkg.features.map((feat, j) => (
                                 <li key={j} className="flex items-center gap-3 text-[11px] font-bold text-white/60">
                                     <Check className="w-3.5 h-3.5 text-primary" strokeWidth={3} />
                                     {feat}
@@ -155,20 +160,18 @@ export default function BillingPage() {
                         </ul>
 
                         <Button
-                            variant={plan.current ? "secondary" : "outline"}
-                            disabled={plan.current || processingPlan !== null}
-                            onClick={() => handleUpgrade(plan.name)}
+                            variant={pkg.bestValue ? "secondary" : "outline"}
+                            disabled={processingPlan !== null}
+                            onClick={() => handleTopUp(pkg.id)}
                             className={cn(
                                 "w-full h-12 rounded-2xl font-black uppercase tracking-widest text-[10px]",
-                                plan.current ? "bg-white/5 border-white/10 text-white cursor-default" : "border-white/5 text-white/40 hover:text-white"
+                                pkg.bestValue ? "bg-white/5 border-white/10 hover:bg-white text-black transition-colors" : "border-white/5 text-white/40 hover:text-white"
                             )}
                         >
-                            {processingPlan === plan.name ? (
+                            {processingPlan === pkg.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : plan.current ? (
-                                "Current Plan"
                             ) : (
-                                "Upgrade"
+                                "Buy Credits"
                             )}
                         </Button>
                     </Card>

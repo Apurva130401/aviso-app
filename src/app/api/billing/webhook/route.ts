@@ -23,38 +23,31 @@ export async function POST(req: NextRequest) {
         const payload = body.payload;
 
         switch (event) {
-            case "subscription.activated":
-            case "subscription.charged": {
-                const userId = payload.subscription.entity.notes.userId;
-                const planId = payload.subscription.entity.plan_id;
+            case "order.paid": {
+                const { notes, amount } = payload.payment.entity;
+                const userId = notes.userId;
+                const creditsToAdd = parseInt(notes.credits || "0", 10);
 
-                // Map planId back to tier and credits
-                let tier = 'Starter';
-                let creditsTotal = 1000;
-
-                if (planId === 'plan_pro_123') {
-                    tier = 'Pro';
-                    creditsTotal = 15000;
+                if (!userId || !creditsToAdd) {
+                    console.error("Missing userId or credits in webhook notes");
+                    break;
                 }
 
-                await supabase
+                // Fetch current user profile to add to existing balance
+                const { data: profile } = await supabase
                     .from("user_profiles")
-                    .update({
-                        plan_tier: tier,
-                        credits_total: creditsTotal,
-                        subscription_id: payload.subscription.entity.id,
-                        subscription_status: 'active'
-                    })
-                    .eq("id", userId);
-                break;
-            }
-            case "subscription.halted":
-            case "subscription.cancelled": {
-                const userId = payload.subscription.entity.notes.userId;
-                await supabase
-                    .from("user_profiles")
-                    .update({ subscription_status: 'inactive' })
-                    .eq("id", userId);
+                    .select("credits_total")
+                    .eq("id", userId)
+                    .single();
+
+                if (profile) {
+                    await supabase
+                        .from("user_profiles")
+                        .update({
+                            credits_total: profile.credits_total + creditsToAdd
+                        })
+                        .eq("id", userId);
+                }
                 break;
             }
         }

@@ -11,13 +11,20 @@ export async function analyzeBrandAction(url: string, goal?: string, context?: s
 
         if (!user) throw new Error("Unauthorized");
 
-        // Credit Guard
+        // Credit Guard (Text Action = 2 credits)
+        const creditCost = 2;
         const { data: profile } = await supabase.from("user_profiles").select("credits_total, credits_used").eq("id", user.id).single();
-        if (profile && profile.credits_used >= profile.credits_total) {
-            return { success: false, error: "CREDITS_EXHAUSTED", message: "You have exhausted your neural credits. Please upgrade your plan or top up." };
+        if (profile && (profile.credits_total - profile.credits_used < creditCost)) {
+            return { success: false, error: "CREDITS_EXHAUSTED", message: "Insufficient credits for analysis. Please top up." };
         }
 
         const analysis = await analyzeBrand(url, goal, context);
+
+        // Deduct credits on success
+        await supabase
+            .from("user_profiles")
+            .update({ credits_used: profile!.credits_used + creditCost })
+            .eq("id", user.id);
 
         // Persist campaign and analysis
         const { data: campaign, error } = await supabase
@@ -63,16 +70,26 @@ export async function generateAdsAction(
 ) {
     try {
         const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) throw new Error("Unauthorized");
+
+        // Credit Guard (Text = 2, Text+Image = 42)
+        const creditCost = includeImages ? 42 : 2;
+        const { data: profile } = await supabase.from("user_profiles").select("credits_total, credits_used").eq("id", user.id).single();
+
+        if (profile && (profile.credits_total - profile.credits_used < creditCost)) {
+            return { success: false, error: "CREDITS_EXHAUSTED", message: "Insufficient credits. Please top up." };
+        }
+
         const ads = await generateFinalAds(analysis, tone, platforms, settings, includeImages);
 
-        // Deduct Credit (100 credits per successful generation flow)
-        const creditCost = 100;
-        const { data: profile } = await supabase.from("user_profiles").select("credits_used").eq("id", (await supabase.auth.getUser()).data.user?.id).single();
+        // Deduct Credit upon successful generation
         if (profile) {
             await supabase
                 .from("user_profiles")
-                .update({ credits_used: (profile.credits_used || 0) + creditCost })
-                .eq("id", (await supabase.auth.getUser()).data.user?.id);
+                .update({ credits_used: profile.credits_used + creditCost })
+                .eq("id", user.id);
         }
 
         if (campaignId) {
@@ -140,9 +157,8 @@ export async function getDashboardStatsAction() {
                 .from("user_profiles")
                 .insert({
                     id: user.id,
-                    credits_total: 1000,
+                    credits_total: 100,
                     credits_used: 0,
-                    plan_tier: 'Starter',
                     full_name: fullName,
                     email: userEmail
                 })
