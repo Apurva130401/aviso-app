@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface ButtonProps extends HTMLMotionProps<"button"> {
     variant?: "primary" | "secondary" | "outline" | "ghost";
-    size?: "sm" | "md" | "lg";
+    size?: "sm" | "md" | "lg" | "icon";
     loading?: boolean;
 }
 
@@ -21,6 +21,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             sm: "px-4 py-2 text-[10px] rounded-xl font-bold uppercase tracking-widest",
             md: "px-6 py-3.5 text-xs font-bold rounded-2xl uppercase tracking-widest",
             lg: "px-10 py-5 text-sm font-extrabold rounded-[28px] uppercase tracking-[0.2em]",
+            icon: "p-2 rounded-lg",
         };
 
         return (

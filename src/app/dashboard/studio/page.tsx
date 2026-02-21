@@ -64,7 +64,7 @@ export default function StudioPage() {
                             "p-3 rounded-2xl transition-all duration-300 relative group",
                             tool.active ? "bg-accent/10 text-accent border border-accent/20" : "text-white/20 hover:text-white hover:bg-white/5"
                         )}>
-                            {React.cloneElement(tool.icon as React.ReactElement, { size: 20 })}
+                            {React.cloneElement(tool.icon as React.ReactElement<{ size?: number }>, { size: 20 })}
                             {tool.active && <motion.div layoutId="active-tool" className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-4 bg-accent rounded-full" />}
                         </button>
                     ))}
