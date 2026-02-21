@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+:root {
+  --background: #030303;
+  --foreground: #ffffff;
+  --surface: #0a0a0a;
+  --surface-hover: #121212;
+  --primary: #f59e0b;
+  --accent: #fbbf24;
+  --border: #1f1f1f;
+  --border-light: #2a2a2a;
+  --text-secondary: #888888;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-border-subtle: var(--border);
+  --color-border-light: var(--border-light);
+  --color-text-secondary: var(--text-secondary);
+
+  --font-sans: var(--font-jakarta-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+.bg-grid-subtle {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.mask-soft-edges {
+  mask-image: radial-gradient(circle at center, black, transparent 80%);
+}
+
+::selection {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #ffffff;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
