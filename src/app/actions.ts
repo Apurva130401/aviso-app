@@ -123,12 +123,15 @@ export async function getDashboardStatsAction() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Unauthorized");
 
-        // 1. Ensure profile exists (Upsert logic)
+        // 1. Ensure profile exists and is synced (Upsert-like logic)
         const { data: profileData, error: profileError } = await supabase
             .from("user_profiles")
             .select("*")
             .eq("id", user.id)
             .maybeSingle();
+
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name || "";
+        const userEmail = user.email || "";
 
         let profile = profileData;
 
@@ -139,13 +142,28 @@ export async function getDashboardStatsAction() {
                     id: user.id,
                     credits_total: 1000,
                     credits_used: 0,
-                    plan_tier: 'Starter'
+                    plan_tier: 'Starter',
+                    full_name: fullName,
+                    email: userEmail
                 })
                 .select()
                 .single();
 
             if (createError) console.error("Profile Creation Error:", createError);
             profile = newProfile;
+        } else if (profile.full_name !== fullName || profile.email !== userEmail) {
+            // Sync if data changed
+            const { data: updatedProfile, error: updateError } = await supabase
+                .from("user_profiles")
+                .update({
+                    full_name: profile.full_name || fullName,
+                    email: profile.email || userEmail
+                })
+                .eq("id", user.id)
+                .select()
+                .single();
+
+            if (!updateError) profile = updatedProfile;
         }
 
         // 2. Fetch Aggregated Stats
@@ -165,7 +183,9 @@ export async function getDashboardStatsAction() {
                 totalAssets: assetCount || 0,
                 creditsUsed: profile?.credits_used || 0,
                 creditsTotal: profile?.credits_total || 1000,
-                planTier: profile?.plan_tier || 'Starter'
+                planTier: profile?.plan_tier || 'Starter',
+                fullName: profile?.full_name || '',
+                email: profile?.email || ''
             }
         };
     } catch (error) {

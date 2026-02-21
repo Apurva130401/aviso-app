@@ -6,12 +6,22 @@ import { ChevronRight, Bell, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import { logout } from "@/app/auth/actions";
+import { UserProvider, useUser } from "@/context/UserContext";
 
 export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    return (
+        <UserProvider>
+            <DashboardContent>{children}</DashboardContent>
+        </UserProvider>
+    );
+}
+
+function DashboardContent({ children }: { children: React.ReactNode }) {
+    const { profile, loading } = useUser();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -53,7 +63,10 @@ export default function DashboardLayout({
                                 className="flex items-center gap-2 pl-2 group transition-all"
                             >
                                 <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-primary font-bold shadow-inner border border-white/[0.1] text-xs group-hover:border-primary/50 transition-colors">
-                                    AR
+                                    {profile?.full_name
+                                        ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                                        : '??'
+                                    }
                                 </div>
                             </button>
 
@@ -74,7 +87,8 @@ export default function DashboardLayout({
                                             <div className="p-2 space-y-1">
                                                 <div className="px-3 py-2 border-b border-white/5 mb-1">
                                                     <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-0.5">Account Profile</p>
-                                                    <p className="text-xs font-medium text-white/90 truncate">Apurva R.</p>
+                                                    <p className="text-xs font-medium text-white/90 truncate">{profile?.full_name || 'User'}</p>
+                                                    <p className="text-[9px] text-white/20 truncate">{profile?.email}</p>
                                                 </div>
                                                 <button className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors group">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover:bg-primary transition-colors" />

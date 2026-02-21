@@ -6,8 +6,19 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/context/UserContext";
 
 export default function SettingsPage() {
+    const { profile, loading } = useUser();
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8">
             <div>
@@ -50,11 +61,11 @@ export default function SettingsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-white/20 ml-1">Full Name</label>
-                                <Input defaultValue="Apurva R." className="h-12 bg-black/40 border-white/[0.05] rounded-2xl focus:ring-accent/40 text-sm" />
+                                <Input defaultValue={profile?.full_name || ""} className="h-12 bg-black/40 border-white/[0.05] rounded-2xl focus:ring-accent/40 text-sm" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-white/20 ml-1">Email Address</label>
-                                <Input defaultValue="apurva@syncflo.xyz" className="h-12 bg-black/40 border-white/[0.05] rounded-2xl focus:ring-accent/40 text-sm" />
+                                <Input defaultValue={profile?.email || ""} className="h-12 bg-black/40 border-white/[0.05] rounded-2xl focus:ring-accent/40 text-sm" />
                             </div>
                         </div>
 
