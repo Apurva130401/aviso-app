@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { CreditCard, Zap, Check, ShieldCheck, Clock, Download, Plus, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { CreditCard, Zap, Check, ShieldCheck, Clock, Download, Plus, Loader2, X, PartyPopper } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { getDashboardStatsAction } from "@/app/actions";
-import { createSubscriptionAction } from "@/app/auth/billing";
 import Script from "next/script";
 
 declare global {
@@ -20,15 +19,18 @@ export default function BillingPage() {
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [creditsAdded, setCreditsAdded] = useState(0);
+
+    const loadData = async () => {
+        const result = await getDashboardStatsAction();
+        if (result.success) {
+            setProfile(result.data);
+        }
+        setLoading(false);
+    }
 
     useEffect(() => {
-        async function loadData() {
-            const result = await getDashboardStatsAction();
-            if (result.success) {
-                setProfile(result.data);
-            }
-            setLoading(false);
-        }
         loadData();
     }, []);
 
@@ -51,9 +53,30 @@ export default function BillingPage() {
                     name: "Aviso App",
                     description: "Neural Credits Top-up",
                     order_id: data.orderId,
-                    handler: function (response: any) {
-                        alert("Payment successful! Credits will be added momentarily.");
-                        window.location.reload();
+                    handler: async function (response: any) {
+                        try {
+                            const verifyRes = await fetch("/api/billing/verify-payment", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    packageId
+                                })
+                            });
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.success) {
+                                setCreditsAdded(verifyData.creditsAdded);
+                                setShowSuccess(true);
+                                loadData(); // refresh credits silently
+                            } else {
+                                alert("Failed to verify payment: " + verifyData.error);
+                            }
+                        } catch (e) {
+                            console.error("Verification error", e);
+                            alert("Payment verification error.");
+                        }
                     },
                     prefill: { email: profile?.email || "" },
                     theme: { color: "#FFFFFF" },
@@ -81,8 +104,41 @@ export default function BillingPage() {
     ];
 
     return (
-        <div className="space-y-12 pb-20">
+        <div className="space-y-12 pb-20 relative">
             <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+
+            <AnimatePresence>
+                {showSuccess && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-[#0a0a0a] border border-white/10 p-8 rounded-[32px] max-w-sm w-full relative overflow-hidden text-center"
+                        >
+                            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-primary/20 to-transparent pointer-events-none" />
+                            <div className="mx-auto w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-6 text-primary relative z-10">
+                                <Zap size={32} strokeWidth={3} className="animate-pulse" />
+                            </div>
+                            <h2 className="text-2xl font-black text-white tracking-tight mb-2 relative z-10">Top-up Successful!</h2>
+                            <p className="text-white/60 text-sm font-medium mb-8 relative z-10">
+                                {creditsAdded} credits have been added to your workspace. Start generating more high-converting content.
+                            </p>
+                            <Button
+                                onClick={() => setShowSuccess(false)}
+                                className="w-full h-12 bg-white text-black font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/90"
+                            >
+                                Continue
+                            </Button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div>
                 <h1 className="text-3xl font-black tracking-tight text-white mb-2">
@@ -227,3 +283,4 @@ export default function BillingPage() {
         </div>
     );
 }
+

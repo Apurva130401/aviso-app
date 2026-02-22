@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify({
                 amount: selectedPackage.amount, // amount in the smallest currency unit (cents, paise)
                 currency: "USD",
-                receipt: `receipt_${user.id}_${Date.now()}`,
+                receipt: `rcpt_${user.id.substring(0, 8)}_${Date.now()}`,
                 notes: {
                     userId: user.id,
                     packageId: packageId,
