@@ -6,7 +6,7 @@ import { CreditCard, Zap, Check, ShieldCheck, Clock, Download, Plus, Loader2, X,
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { getDashboardStatsAction } from "@/app/actions";
+import { getDashboardStatsAction, getPaymentHistoryAction } from "@/app/actions";
 import Script from "next/script";
 
 declare global {
@@ -21,11 +21,18 @@ export default function BillingPage() {
     const [processingPlan, setProcessingPlan] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
     const [creditsAdded, setCreditsAdded] = useState(0);
+    const [invoices, setInvoices] = useState<any[]>([]);
 
     const loadData = async () => {
-        const result = await getDashboardStatsAction();
-        if (result.success) {
-            setProfile(result.data);
+        const [statsResult, historyResult] = await Promise.all([
+            getDashboardStatsAction(),
+            getPaymentHistoryAction()
+        ]);
+        if (statsResult.success) {
+            setProfile(statsResult.data);
+        }
+        if (historyResult.success && historyResult.data) {
+            setInvoices(historyResult.data);
         }
         setLoading(false);
     }
@@ -94,13 +101,9 @@ export default function BillingPage() {
     };
 
     const topUpPackages = [
-        { id: "small_topup", name: "Starter Refill", price: "$10", credits: "1000 Credits", features: ["1 Text-only Campaign", "Basic Email Support"] },
-        { id: "medium_topup", name: "Pro Refill", price: "$25", credits: "2500 Credits", features: ["Ideal for Image Gen", "Priority Queue", "Email Support"], bestValue: true },
-        { id: "large_topup", name: "Agency Bulk", price: "$50", credits: "6000 Credits", features: ["Maximum Margin", "Dedicated Rep", "24/7 Support"] },
-    ];
-
-    const invoices = [
-        { id: "INV-2026-001", date: "Feb 01, 2026", amount: "$49.00", status: "paid" },
+        { id: "starter", name: "Starter Refill", price: "$10", credits: "1000 Credits", features: ["1 Text-only Campaign", "Basic Email Support"] },
+        { id: "growth", name: "Growth Refill", price: "$25", credits: "3000 Credits", features: ["Ideal for Image Gen", "Priority Queue", "Email Support"], bestValue: true },
+        { id: "pro", name: "Pro Bulk", price: "$50", credits: "7500 Credits", features: ["Maximum Margin", "Dedicated Rep", "24/7 Support"] },
     ];
 
     return (
@@ -259,11 +262,15 @@ export default function BillingPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02]">
-                            {invoices.map((inv) => (
+                            {invoices.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-8 py-8 text-center text-xs font-medium text-white/40">No payment history found.</td>
+                                </tr>
+                            ) : invoices.map((inv) => (
                                 <tr key={inv.id} className="group hover:bg-white/[0.01] transition-colors">
-                                    <td className="px-8 py-5 text-xs font-black text-white/60 uppercase tracking-widest">{inv.id}</td>
-                                    <td className="px-8 py-5 text-xs font-bold text-white/40">{inv.date}</td>
-                                    <td className="px-8 py-5 text-xs font-black text-white">{inv.amount}</td>
+                                    <td className="px-8 py-5 text-xs font-black text-white/60 uppercase tracking-widest">{inv.id.substring(0, 12)}</td>
+                                    <td className="px-8 py-5 text-xs font-bold text-white/40">{new Date(inv.created_at).toLocaleDateString()}</td>
+                                    <td className="px-8 py-5 text-xs font-black text-white">${inv.amount?.toFixed(2)}</td>
                                     <td className="px-8 py-5">
                                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
                                             <ShieldCheck size={10} /> {inv.status}

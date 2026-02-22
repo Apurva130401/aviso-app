@@ -248,3 +248,27 @@ export async function getUserAssetsAction() {
         return { success: false, error: "Failed to fetch assets." };
     }
 }
+
+export async function getPaymentHistoryAction() {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Unauthorized");
+
+        const { data, error } = await supabase
+            .from("payments")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("Payment history error or table missing:", error);
+            // Return empty array if table throws error
+            return { success: true, data: [] };
+        }
+        return { success: true, data };
+    } catch (error) {
+        console.error("History Error:", error);
+        return { success: false, error: "Failed to fetch payment history." };
+    }
+}

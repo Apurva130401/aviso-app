@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
         }
 
         const packages: Record<string, { amount: number, credits: number, description: string }> = {
-            'small_topup': { amount: 1000, credits: 800, description: '800 Credits Top-up (Small)' }, // $10.00
-            'medium_topup': { amount: 2500, credits: 2200, description: '2200 Credits Top-up (Medium)' }, // $25.00
-            'large_topup': { amount: 5000, credits: 5000, description: '5000 Credits Top-up (Large)' }, // $50.00
+            'starter': { amount: 1000, credits: 1000, description: '1000 Credits (Starter)' }, // $10.00
+            'growth': { amount: 2500, credits: 3000, description: '3000 Credits (Growth)' }, // $25.00
+            'pro': { amount: 5000, credits: 7500, description: '7500 Credits (Pro)' }, // $50.00
         };
 
         const selectedPackage = packages[packageId];
