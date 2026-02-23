@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { packages, calculateFinalAmount } from "@/config/billing";
+import { validateCouponAction } from "@/app/actions/billing.actions";
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { packageId } = body;
+        const { packageId, couponCode } = body;
 
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -12,13 +14,6 @@ export async function POST(req: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        // Define the packages
-        const packages: Record<string, { amount: number, credits: number, description: string }> = {
-            'starter': { amount: 1000, credits: 1000, description: '1000 Credits (Starter)' }, // $10.00
-            'growth': { amount: 2500, credits: 3000, description: '3000 Credits (Growth)' }, // $25.00
-            'pro': { amount: 5000, credits: 7500, description: '7500 Credits (Pro)' }, // $50.00
-        };
 
         const selectedPackage = packages[packageId];
 
@@ -29,6 +24,14 @@ export async function POST(req: NextRequest) {
         const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
         const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
 
+        let finalAmount = selectedPackage.amount;
+
+        // Properly validate coupon via DB and calculate final amount 
+        if (couponCode) {
+            const validCoupon = await validateCouponAction(couponCode, selectedPackage.id);
+            finalAmount = calculateFinalAmount(selectedPackage.amount, validCoupon);
+        }
+
         // Create Order via Razorpay REST API
         const response = await fetch("https://api.razorpay.com/v1/orders", {
             method: "POST",
@@ -37,13 +40,14 @@ export async function POST(req: NextRequest) {
                 Authorization: `Basic ${Buffer.from(razorpayKeyId + ":" + razorpayKeySecret).toString("base64")}`,
             },
             body: JSON.stringify({
-                amount: selectedPackage.amount, // amount in the smallest currency unit (cents, paise)
+                amount: finalAmount, // amount in the smallest currency unit (cents, paise)
                 currency: "USD",
                 receipt: `rcpt_${user.id.substring(0, 8)}_${Date.now()}`,
                 notes: {
                     userId: user.id,
                     packageId: packageId,
-                    credits: selectedPackage.credits.toString()
+                    credits: selectedPackage.credits.toString(),
+                    couponApplied: couponCode || 'NONE'
                 }
             })
         });
