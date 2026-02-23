@@ -87,6 +87,10 @@ export default function CreateCampaignPage() {
         setFinalAds(null);
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+    };
+
     return (
         <AnimatePresence mode="wait">
             {step === "input" && (
@@ -339,37 +343,146 @@ export default function CreateCampaignPage() {
             )}
 
             {step === "final-ads" && finalAds && (
-                <motion.div key="final" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                <motion.div key="final" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 pb-20">
                     <section className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#0a0a0a]/40 backdrop-blur-md p-8 rounded-3xl border border-white/5 shadow-xl">
                         <div>
                             <h2 className="text-xl font-black tracking-tight text-white mb-1">Campaign <span className="text-accent italic">Neural Synthesis</span></h2>
-                            <div className="flex items-center gap-2 text-white/30">
-                                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-white/5">Primary Metric: {selectedTone}</span>
+                            <div className="flex items-center gap-4">
+                                <Badge variant="outline" className="text-[10px] border-accent/20 bg-accent/5 text-accent font-black tracking-widest uppercase py-1 px-3">Generation Complete</Badge>
+                                <p className="text-[10px] text-white/30 font-medium uppercase tracking-widest max-w-md truncate">Primary Metric: {goal || 'Balanced Intelligence'}</p>
                             </div>
                         </div>
-                        <Button variant="secondary" onClick={startOver} className="h-12 px-6 bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">
-                            <RefreshCcw className="mr-2 w-3.5 h-3.5" strokeWidth={2.5} /> New Cycle
-                        </Button>
+                        <div className="flex gap-4">
+                            <Button onClick={startOver} variant="ghost" className="h-12 px-6 rounded-2xl border border-white/5 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 transition-all">
+                                <RefreshCcw className="w-3.5 h-3.5 mr-2" /> New Cycle
+                            </Button>
+                        </div>
                     </section>
 
-                    <Card className="p-12 text-center space-y-6 bg-[#0a0a0a]/20 border-white/5 rounded-[32px] shadow-lg relative overflow-hidden group border-dashed">
-                        <div className="relative z-10">
-                            <div className="w-16 h-16 bg-accent/10 border border-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <CheckCircle2 className="w-8 h-8 text-accent" strokeWidth={1.5} />
-                            </div>
-                            <h3 className="text-2xl font-black text-white tracking-tight mb-2">Workspace Synchronized</h3>
-                            <p className="text-white/40 max-w-lg mx-auto leading-relaxed text-sm font-medium tracking-wide mb-8">
-                                High-converting ad constructs and strategic insights have been successfully generated for the following nodes:
-                            </p>
-                            <div className="flex justify-center gap-2 flex-wrap">
-                                {platforms.map(p => (
-                                    <Badge key={p} variant="secondary" className="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest bg-white/5 border-white/5 text-white/60">
-                                        {p.toUpperCase()} NODE
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
-                    </Card>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {Object.entries(finalAds).filter(([platform]) => platforms.includes(platform)).map(([platform, variants]: [string, any]) => {
+                            const variant = variants[0]; // Show the first one as primary
+                            if (platform === 'adImage') return null;
+
+                            return (
+                                <motion.div
+                                    key={platform}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="group"
+                                >
+                                    <Card className="bg-[#0a0a0a]/60 backdrop-blur-xl border-white/5 rounded-[32px] overflow-hidden flex flex-col h-full shadow-2xl group-hover:border-accent/20 transition-all duration-500">
+                                        {/* Social Mockup Header */}
+                                        <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent to-primary p-[1.5px]">
+                                                    <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                                                        <Zap className="w-5 h-5 text-accent" />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[11px] font-black text-white uppercase tracking-widest">{platform}</span>
+                                                        <CheckCircle2 className="w-3 h-3 text-primary fill-primary/10" />
+                                                    </div>
+                                                    <span className="text-[9px] font-medium text-white/30 uppercase tracking-[0.2em]">Neural Dispatch</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-1.5">
+                                                <div className="w-1 h-1 rounded-full bg-white/20" />
+                                                <div className="w-1 h-1 rounded-full bg-white/20" />
+                                                <div className="w-1 h-1 rounded-full bg-white/20" />
+                                            </div>
+                                        </div>
+
+                                        {/* Visual/Image Mockup Area */}
+                                        <div className="aspect-square bg-white/[0.03] relative overflow-hidden group/img">
+                                            {finalAds.adImage ? (
+                                                <img src={finalAds.adImage} alt="Neural Creative" className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105" />
+                                            ) : (
+                                                <div className="w-full h-full flex flex-col items-center justify-center p-12 text-center space-y-4">
+                                                    <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-white/10">
+                                                        <Layout className="w-8 h-8" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">No Visual Assets</p>
+                                                        <p className="text-[8px] font-medium text-white/10 uppercase mt-1 tracking-widest">Procedural generation failed or bypassed.</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Interaction Bar */}
+                                        <div className="px-5 py-3 flex items-center justify-between border-b border-white/5">
+                                            <div className="flex gap-4">
+                                                <RefreshCcw className="w-4 h-4 text-white/40" />
+                                                <RefreshCcw className="w-4 h-4 text-white/40" />
+                                                <RefreshCcw className="w-4 h-4 text-white/40" />
+                                            </div>
+                                            <RefreshCcw className="w-4 h-4 text-white/40" />
+                                        </div>
+
+                                        {/* Ad Content Preview */}
+                                        <div className="flex-1 p-5 space-y-4">
+                                            {platform === 'google' ? (
+                                                <div className="space-y-3">
+                                                    <div className="space-y-1">
+                                                        {variant.headlines?.slice(0, 3).map((h: string, i: number) => (
+                                                            <p key={i} className="text-sm font-bold text-accent leading-tight line-clamp-1 border-l-2 border-accent/40 pl-3">{h}</p>
+                                                        ))}
+                                                    </div>
+                                                    <div className="space-y-1.5 pt-1">
+                                                        {variant.descriptions?.slice(0, 2).map((d: string, i: number) => (
+                                                            <p key={i} className="text-[11px] font-medium text-white/50 leading-relaxed">{d}</p>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {variant.headline && (
+                                                        <p className="text-[13px] font-black text-white tracking-tight leading-tight">{variant.headline}</p>
+                                                    )}
+                                                    {(variant.primaryText || variant.postContent) && (
+                                                        <p className="text-[11px] font-medium text-white/50 leading-relaxed line-clamp-4">
+                                                            {variant.primaryText || variant.postContent}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* CTA Section */}
+                                        {variant.cta && (
+                                            <div className="px-5 pb-5">
+                                                <div className="w-full py-2.5 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-between px-4 group/cta hover:bg-accent hover:text-black transition-all cursor-pointer">
+                                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]">{variant.cta}</span>
+                                                    <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover/cta:translate-x-1" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Global Actions */}
+                                        <div className="p-4 bg-black/40 border-t border-white/5 flex gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => copyToClipboard(JSON.stringify(variant, null, 2))}
+                                                className="flex-1 h-10 rounded-xl bg-white/5 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all"
+                                            >
+                                                Copy Intelligence
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => window.open('/studio', '_blank')}
+                                                className="w-10 h-10 rounded-xl bg-white/5 p-0 hover:bg-primary hover:text-black transition-all"
+                                            >
+                                                <Palette className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
                 </motion.div>
             )}
         </AnimatePresence>

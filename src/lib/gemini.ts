@@ -2,6 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 export interface BrandAnalysis {
     coreIdentity: string;
+    brandArchetype: string;
     voiceTone: string;
     targetAudience: string;
     uvp: string;
@@ -21,17 +22,18 @@ export const analyzeBrand = async (url: string, goal?: string, additionalContext
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
     const prompt = `
-    Act as an expert Brand Strategist.
+    Act as an elite Brand Strategist and Marketing Psychologist.
     Analyze the website at ${url}.
     ${goal ? `Campaign Goal: ${goal}` : ""}
     ${additionalContext ? `Additional Context: ${additionalContext}` : ""}
     
-    Extract:
-    1. Core Identity
-    2. Brand Voice & Tone
-    3. Target Audience
-    4. Unique Value Proposition (UVP)
-    5. Suggested Color Palette (provide 5 hex codes that represent the brand)
+    Extract a high-fidelity brand profile:
+    1. Core Identity: What is the soul of this brand?
+    2. Brand Voice & Tone: Specific adjectives and style (e.g., "Witty & Irreverent", "Stoic & Premium").
+    3. Target Audience: Detailed demographics and psychological profile (Pain points, desires).
+    4. Unique Value Proposition (UVP): Why do customers choose them over competitors?
+    5. Brand Archetype: (e.g., The Rebel, The Sage, The Hero).
+    6. Suggested Color Palette: 5 hex codes representing the brand's visual identity.
     
     Return as JSON.
   `;
@@ -40,18 +42,18 @@ export const analyzeBrand = async (url: string, goal?: string, additionalContext
         model: "gemini-flash-lite-latest",
         contents: prompt,
         config: {
-            tools: [{ urlContext: {} }],
             responseMimeType: "application/json",
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
                     coreIdentity: { type: Type.STRING },
+                    brandArchetype: { type: Type.STRING },
                     voiceTone: { type: Type.STRING },
                     targetAudience: { type: Type.STRING },
                     uvp: { type: Type.STRING },
                     colorPalette: { type: Type.ARRAY, items: { type: Type.STRING } },
                 },
-                required: ["coreIdentity", "voiceTone", "targetAudience", "uvp", "colorPalette"],
+                required: ["coreIdentity", "brandArchetype", "voiceTone", "targetAudience", "uvp", "colorPalette"],
             },
         },
     });
@@ -100,23 +102,37 @@ export const generateFinalAds = async (
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
     const prompt = `
-    Generate high-converting ads based on:
-    Brand: ${analysis.coreIdentity}
-    UVP: ${analysis.uvp}
-    Selected Tone/Angle: ${selectedTone}
+    Act as a World-Class Direct Response Copywriter.
+    Your goal is to generate high-converting ads for ${analysis.coreIdentity}.
     
-    Platforms and requested fields:
+    ### Brand Context:
+    - Identity: ${analysis.coreIdentity}
+    - Archetype: ${analysis.brandArchetype}
+    - UVP: ${analysis.uvp}
+    - Target Audience: ${analysis.targetAudience}
+    - Brand Voice/Tone: ${analysis.voiceTone}
+    - Campaign Angle: ${selectedTone}
+    
+    ### Copywriting Guidelines:
+    - Use psychological triggers like scarcity, social proof, or intense curiosity.
+    - Follow high-performance frameworks like PAS (Problem-Agitate-Solution) or AIDA.
+    - Keep it punchy, emotional, and platform-specific.
+    - **Premium Filter**: Strictly avoid cliché marketing words like "Revolutionary", "Unbelievable", "Click here", "Game-changer", "Secret", "Scam".
+    - Focus on the *Identity* and *UVP* of the brand. Use sophisticated, high-end vocabulary that matches a professional agency output.
+    - For Direct Response: Focus on the "One Big Idea" and the "Desired Future State" of the customer.
+    
+    ### Platforms and requested fields:
     ${platforms.map(p => `- ${p}: ${(settings[p] || ["all"]).join(", ")}`).join("\n")}
     
     For each platform, provide 2 variants.
-    - facebook: Primary Text, Headline, CTA
-    - instagram: Primary Text, Headline, CTA
-    - google: 3 Headlines, 2 Descriptions
-    - twitter: Post Content
-    - linkedin: Post Content
+    - facebook: Primary Text (sophisticated & persuasive), Headline (benefit-focused), CTA
+    - instagram: Primary Text (social-first, hook-driven), Headline, CTA
+    - google: 3 Headlines (dynamic & relevant), 2 Descriptions (feature-to-benefit mapping)
+    - twitter: Post Content (authority-building or curiosity-gap hook)
+    - linkedin: Post Content (thought-leadership style, professional patterns)
     
     Return as JSON.
-  `;
+    `;
 
     const textResponse = await ai.models.generateContent({
         model: "gemini-flash-lite-latest",
@@ -136,7 +152,15 @@ export const generateFinalAds = async (
         },
     });
 
-    const result = JSON.parse(textResponse.text || "{}");
+    const rawText = textResponse.text || "{}";
+    let result: any;
+    try {
+        result = JSON.parse(rawText);
+    } catch {
+        // Sanitize bad escape sequences from Gemini output
+        const sanitized = rawText.replace(/\\(?!["\\/bfnrtu])/g, "\\\\");
+        result = JSON.parse(sanitized);
+    }
 
     if (includeImages) {
         const imagePrompt = `High-end professional ad photography for ${analysis.coreIdentity}. 

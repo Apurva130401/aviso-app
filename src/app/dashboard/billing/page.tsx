@@ -25,6 +25,7 @@ export default function BillingPage() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [creditsAdded, setCreditsAdded] = useState(0);
     const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState<'topups' | 'offers'>('topups');
 
     const loadData = async () => {
         const [statsResult, historyResult, couponsResult] = await Promise.all([
@@ -137,7 +138,7 @@ export default function BillingPage() {
             {/* Header Content */}
             <div className="relative z-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest mb-4">
-                    <Sparkles size={12} /> Pay-As-You-Go Layer
+                    Pay-As-You-Go Layer
                 </div>
                 <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-3">
                     Billing & <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#ff8c00] italic">Credit Top-ups</span>
@@ -185,9 +186,23 @@ export default function BillingPage() {
                 </div>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* Plans Grid */}
-                <div id="topup-section" className="lg:col-span-3 space-y-6">
+            <div className="flex gap-4 border-b border-white/5 pb-4 mb-8">
+                <button
+                    onClick={() => setActiveTab('topups')}
+                    className={cn("text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl transition-colors", activeTab === 'topups' ? "bg-white/10 text-white" : "text-white/40 hover:text-white hover:bg-white/5")}
+                >
+                    Credit TopUps
+                </button>
+                <button
+                    onClick={() => setActiveTab('offers')}
+                    className={cn("text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl transition-colors", activeTab === 'offers' ? "bg-white/10 text-white" : "text-white/40 hover:text-white hover:bg-white/5")}
+                >
+                    Offers
+                </button>
+            </div>
+
+            {activeTab === 'topups' ? (
+                <div id="topup-section" className="space-y-6">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
                             <Zap size={16} strokeWidth={3} />
@@ -197,24 +212,13 @@ export default function BillingPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {topUpPackages.map((pkg, i) => (
-                            <Card key={pkg.id} className={cn(
-                                "p-8 bg-[#0a0a0a]/60 border-white/5 rounded-[40px] flex flex-col space-y-8 relative group hover:border-white/20 hover:bg-[#111] transition-all duration-300",
-                                pkg.bestValue && "border-primary/30 bg-primary/5 hover:border-primary/50"
-                            )}>
-                                {pkg.bestValue && (
-                                    <div className="absolute -top-3 inset-x-0 flex justify-center">
-                                        <div className="bg-primary text-black text-[9px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-[0_0_20px_rgba(255,165,0,0.4)]">
-                                            Most Popular
-                                        </div>
-                                    </div>
-                                )}
+                            <Card key={pkg.id} className="p-8 bg-[#0a0a0a]/60 border-white/5 rounded-[40px] flex flex-col space-y-8 relative group hover:border-white/20 hover:bg-[#111] transition-all duration-300">
                                 <div>
                                     <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-3">{pkg.name}</p>
                                     <div className="flex items-baseline gap-1">
-                                        <span className={cn(
-                                            "text-4xl font-black tracking-tighter transition-colors",
-                                            pkg.bestValue ? "text-primary" : "text-white group-hover:text-primary"
-                                        )}>{pkg.price}</span>
+                                        <span className="text-4xl font-black tracking-tighter transition-colors text-white group-hover:text-primary">
+                                            {pkg.price}
+                                        </span>
                                         <span className="text-xs text-white/20 font-bold tracking-wider">USD</span>
                                     </div>
                                     <div className="mt-3 inline-flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-full border border-white/5">
@@ -223,71 +227,55 @@ export default function BillingPage() {
                                     </div>
                                 </div>
 
-                                <ul className="flex-1 space-y-4">
-                                    {pkg.features.map((feat, j) => (
-                                        <li key={j} className="flex items-start gap-3 text-xs font-bold text-white/50 leading-relaxed">
-                                            <div className="mt-0.5 min-w-[14px]">
-                                                <Check className="w-3.5 h-3.5 text-primary" strokeWidth={4} />
-                                            </div>
-                                            {feat}
-                                        </li>
-                                    ))}
-                                </ul>
+                                <div className="flex-1" />
 
                                 <Button
                                     onClick={() => router.push(`/checkout/${pkg.id}`)}
-                                    className={cn(
-                                        "w-full h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-between px-6 transition-all duration-300",
-                                        pkg.bestValue
-                                            ? "bg-primary hover:bg-primary/90 text-black shadow-[0_5px_20px_rgba(255,165,0,0.3)]"
-                                            : "bg-white/5 border border-white/10 text-white hover:bg-white hover:text-black hover:border-transparent"
-                                    )}
+                                    className="w-full h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-between px-6 transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white hover:text-black hover:border-transparent"
                                 >
                                     <span>Select Plan</span>
-                                    <ArrowRight size={14} className={cn(
-                                        "transition-transform group-hover:translate-x-1",
-                                        pkg.bestValue ? "text-black" : "text-white group-hover:text-black"
-                                    )} />
+                                    <ArrowRight size={14} className="text-white group-hover:text-black transition-transform group-hover:translate-x-1" />
                                 </Button>
                             </Card>
                         ))}
                     </div>
                 </div>
-
-                {/* Coupons Section Sidebar */}
-                <div className="lg:col-span-1 space-y-6">
+            ) : (
+                <div className="space-y-6 max-w-3xl">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60">
                             <Tag size={14} strokeWidth={3} />
                         </div>
-                        <h2 className="text-xl font-black tracking-tight text-white">Active Offers</h2>
+                        <h2 className="text-2xl font-black tracking-tight text-white">Active Offers</h2>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {availableCoupons.map((coupon, idx) => (
-                            <Card key={idx} className="p-5 bg-gradient-to-br from-[#111] to-[#0a0a0a] border-white/5 rounded-3xl relative overflow-hidden group">
+                            <Card key={idx} className="p-6 bg-gradient-to-br from-[#111] to-[#0a0a0a] border-white/5 rounded-3xl relative overflow-hidden group hover:border-white/20 transition-all">
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                     <Ticket size={64} className="text-primary -rotate-45 translate-x-6 -translate-y-4" />
                                 </div>
                                 <div className="relative z-10">
-                                    <p className="text-xs text-white/60 font-bold mb-3">{coupon.description}</p>
-                                    <div className="inline-flex items-center gap-2 bg-black/50 border border-white/10 px-3 py-2 rounded-xl">
-                                        <span className="text-primary font-black tracking-widest text-xs uppercase">{coupon.code}</span>
+                                    <p className="text-sm text-white/80 font-bold mb-4">{coupon.description}</p>
+                                    <div className="inline-flex items-center gap-2 bg-black/50 border border-white/10 px-4 py-2.5 rounded-xl">
+                                        <span className="text-primary font-black tracking-widest text-sm uppercase">{coupon.code}</span>
                                     </div>
                                     {coupon.validFor && coupon.validFor.length > 0 && (
-                                        <p className="text-[9px] text-white/30 font-black uppercase tracking-widest mt-4">
+                                        <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-5">
                                             Valid for: {coupon.validFor.map((id: string) => packages[id]?.name || id).join(', ')}
                                         </p>
                                     )}
                                 </div>
                             </Card>
                         ))}
-                        <Card className="p-6 bg-[#0a0a0a]/40 border-dashed border-white/10 rounded-3xl text-center">
-                            <p className="text-xs text-white/40 font-medium">Apply these codes at checkout</p>
-                        </Card>
                     </div>
+                    {availableCoupons.length === 0 && (
+                        <Card className="p-8 bg-[#0a0a0a]/40 border-dashed border-white/10 rounded-3xl text-center">
+                            <p className="text-sm text-white/40 font-medium">No active offers available at this time.</p>
+                        </Card>
+                    )}
                 </div>
-            </div>
+            )}
 
             {/* History */}
             <div className="pt-8 relative z-10">

@@ -23,6 +23,7 @@ export type Coupon = {
 };
 
 export const packages: Record<string, Package> = {
+
     'starter': {
         id: 'starter',
         name: 'Starter Refill',
@@ -30,8 +31,8 @@ export const packages: Record<string, Package> = {
         amount: 1000,
         credits: 1000,
         creditsLabel: '1000 Credits',
-        description: '1000 Credits (Starter)',
-        features: ["1 Text-only Campaign", "Basic Email Support"]
+        description: '1000 Credits',
+        features: []
     },
     'growth': {
         id: 'growth',
@@ -40,9 +41,8 @@ export const packages: Record<string, Package> = {
         amount: 2500,
         credits: 3000,
         creditsLabel: '3000 Credits',
-        description: '3000 Credits (Growth)',
-        features: ["Ideal for Image Gen", "Priority Queue", "Email Support"],
-        bestValue: true
+        description: '3000 Credits',
+        features: []
     },
     'pro': {
         id: 'pro',
@@ -51,9 +51,10 @@ export const packages: Record<string, Package> = {
         amount: 5000,
         credits: 7500,
         creditsLabel: '7500 Credits',
-        description: '7500 Credits (Pro)',
-        features: ["Maximum Margin", "Dedicated Rep", "24/7 Support"]
+        description: '7500 Credits',
+        features: []
     },
+
 };
 /**
  * Calculates the final amount in cents after applying a coupon object.

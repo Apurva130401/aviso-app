@@ -41,16 +41,44 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="hidden lg:flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-white/30">
-                            <span className="hover:text-primary transition-colors cursor-pointer">Dashboard</span>
-                            <ChevronRight className="w-3 h-3" strokeWidth={3} />
-                            <span className="text-white">Workspace 01</span>
+                            <span className="text-white hover:text-primary transition-colors cursor-pointer">Dashboard</span>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05]">
-                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">System Online</span>
+                        <div className="relative group/credits hidden md:block">
+                            <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] cursor-pointer hover:bg-white/[0.05] transition-colors">
+                                <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Credit Usage</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-white">{profile?.credits_used || 0} / {profile?.credits_total || 100}</span>
+                                    <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            style={{ width: `${Math.min(100, ((profile?.credits_used || 0) / (profile?.credits_total || 100)) * 100)}%` }}
+                                            className="h-full bg-gradient-to-r from-accent to-primary"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Hover Tooltip */}
+                            <div className="absolute top-full right-0 mt-2 w-64 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover/credits:opacity-100 group-hover/credits:visible transition-all duration-200 z-50 overflow-hidden transform origin-top translate-y-2 group-hover/credits:translate-y-0">
+                                <div className="p-4 space-y-3">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-white/60 font-medium">Available Credits</span>
+                                        <span className="text-white font-black">{(profile?.credits_total || 100) - (profile?.credits_used || 0)}</span>
+                                    </div>
+                                    <div className="w-full h-px bg-white/5 my-2" />
+                                    <p className="text-[10px] text-white/40 leading-relaxed">
+                                        Credits are consumed whenever you generate AI campaigns, assets, and ads. Top up your balance to keep creating.
+                                    </p>
+                                    <button
+                                        onClick={() => window.location.href = '/dashboard/billing'}
+                                        className="w-full mt-2 py-2.5 bg-white text-black text-[10px] font-black tracking-widest uppercase rounded-lg hover:bg-white/90 transition-colors"
+                                    >
+                                        Top Up Credits
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <button className="p-2 hover:bg-white/5 rounded-xl text-white/40 transition-all hover:text-white">
                             <Bell className="w-4 h-4" strokeWidth={1.5} />

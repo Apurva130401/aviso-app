@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "motion/react";
-import { LayoutGrid, Plus, History, Briefcase, Palette, Settings, HelpCircle, LogOut, Menu, X, CreditCard } from "lucide-react";
+import { LayoutGrid, Plus, History, Briefcase, Palette, Settings, HelpCircle, LogOut, Menu, X, CreditCard, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 import Link from "next/link";
@@ -14,10 +14,7 @@ export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
     const router = useRouter();
     const { profile } = useUser();
 
-    // Default to a small amount if profile not fully loaded yet to avoid ugly NaN
-    const creditsUsed = profile?.credits_used || 0;
-    const creditsTotal = profile?.credits_total || 100;
-    const usagePercent = Math.min(100, (creditsUsed / creditsTotal) * 100);
+
 
     return (
         <aside
@@ -39,7 +36,7 @@ export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
                     <SidebarItem href="/dashboard/create" icon={<Plus strokeWidth={1.5} className="w-4 h-4" />} label="New Campaign" active={pathname === "/dashboard/create"} />
                     <SidebarItem href="/dashboard/history" icon={<History strokeWidth={1.5} className="w-4 h-4" />} label="History" active={pathname === "/dashboard/history"} />
                     <SidebarItem href="/dashboard/assets" icon={<Briefcase strokeWidth={1.5} className="w-4 h-4" />} label="Assets" active={pathname === "/dashboard/assets"} />
-                    <SidebarItem href="/dashboard/studio" icon={<Palette strokeWidth={1.5} className="w-4 h-4" />} label="Studio" active={pathname === "/dashboard/studio"} />
+                    <SidebarItem onClick={() => window.open('/studio', '_blank')} icon={<Palette strokeWidth={1.5} className="w-4 h-4" />} label="Studio" suffix={<ExternalLink className="w-3 h-3 text-white/20" />} />
                     <SidebarItem href="/dashboard/billing" icon={<CreditCard strokeWidth={1.5} className="w-4 h-4" />} label="Billing" active={pathname === "/dashboard/billing"} />
 
                     <div className="pt-6 pb-2 px-4">
@@ -49,38 +46,13 @@ export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
                     <SidebarItem href="/dashboard/help" icon={<HelpCircle strokeWidth={1.5} className="w-5 h-5" />} label="Help Center" active={pathname === "/dashboard/help"} />
                 </nav>
 
-                <div className="p-6 border-t border-white/[0.05]">
-                    <div className="bg-white/[0.03] backdrop-blur-md border border-white/[0.05] rounded-[24px] p-5">
-                        <div className="flex items-center justify-between mb-3">
-                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Resource Usage</p>
-                            <p className="text-[10px] font-bold text-white">{creditsUsed} / {creditsTotal}</p>
-                        </div>
-                        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-4">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${usagePercent}%` }}
-                                className="h-full bg-gradient-to-r from-accent to-primary"
-                            />
-                        </div>
-                        <Button
-                            className="w-full h-10 tracking-widest uppercase text-[10px] font-black"
-                            variant="primary"
-                            size="sm"
-                            onClick={() => {
-                                router.push('/dashboard/billing');
-                                if (window.innerWidth < 1024) onToggle();
-                            }}
-                        >
-                            Top Up Credits
-                        </Button>
-                    </div>
-                </div>
+
             </div>
         </aside>
     );
 };
 
-const SidebarItem = ({ icon, label, active, href, onClick }: { icon: React.ReactNode; label: string; active?: boolean; href?: string; onClick?: () => void }) => {
+const SidebarItem = ({ icon, label, active, href, onClick, suffix }: { icon: React.ReactNode; label: string; active?: boolean; href?: string; onClick?: () => void; suffix?: React.ReactNode }) => {
     const content = (
         <div
             className={cn(
@@ -106,6 +78,7 @@ const SidebarItem = ({ icon, label, active, href, onClick }: { icon: React.React
             <span className="relative z-10 transition-colors tracking-tight uppercase text-[9px]">
                 {label}
             </span>
+            {suffix && <span className="relative z-10 ml-auto">{suffix}</span>}
         </div>
     );
 

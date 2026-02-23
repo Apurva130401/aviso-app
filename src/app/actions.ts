@@ -94,12 +94,21 @@ export async function generateAdsAction(
 
         if (campaignId) {
             // Save assets to database
-            const assetEntries = ads.map((ad: any) => ({
-                campaign_id: campaignId,
-                type: ad.type || 'creative_set',
-                content: typeof ad === 'string' ? ad : JSON.stringify(ad),
-                metadata: { platform: ad.platform, tone }
-            }));
+            // Flatten platform-keyed object into asset entries
+            const assetEntries: any[] = [];
+            for (const [platform, variants] of Object.entries(ads)) {
+                if (platform === 'adImage') continue; // skip the image data
+                if (Array.isArray(variants)) {
+                    variants.forEach((variant: any) => {
+                        assetEntries.push({
+                            campaign_id: campaignId,
+                            type: 'creative_set',
+                            content: JSON.stringify(variant),
+                            metadata: { platform, tone }
+                        });
+                    });
+                }
+            }
 
             const { error: assetError } = await supabase
                 .from("assets")
@@ -239,6 +248,7 @@ export async function getUserAssetsAction() {
         const { data, error } = await supabase
             .from("assets")
             .select("*, campaigns(url)")
+            .eq("campaigns.user_id", user.id)
             .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -246,6 +256,26 @@ export async function getUserAssetsAction() {
     } catch (error) {
         console.error("Assets Error:", error);
         return { success: false, error: "Failed to fetch assets." };
+    }
+}
+
+export async function getCampaignAssetsAction(campaignId: string) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Unauthorized");
+
+        const { data, error } = await supabase
+            .from("assets")
+            .select("*")
+            .eq("campaign_id", campaignId)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (error) {
+        console.error("Campaign Assets Error:", error);
+        return { success: false, error: "Failed to fetch campaign assets." };
     }
 }
 
