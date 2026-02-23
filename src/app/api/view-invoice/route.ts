@@ -18,16 +18,10 @@ export async function GET(req: NextRequest) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Fetch payment details along with user profile
+        // Fetch payment details
         const { data: payment, error } = await supabase
             .from("payments")
-            .select(`
-                *,
-                user_profiles (
-                    full_name,
-                    email
-                )
-            `)
+            .select('*')
             .eq("id", paymentId)
             .eq("user_id", user.id) // Ensure they own this payment
             .single();
@@ -36,8 +30,15 @@ export async function GET(req: NextRequest) {
             return new NextResponse("Invoice not found or unauthorized", { status: 404 });
         }
 
-        const customerName = payment.user_profiles?.full_name || user.email?.split("@")[0] || "Customer";
-        const customerEmail = payment.user_profiles?.email || user.email || "";
+        // Manually fetch the user profile Name
+        const { data: profile } = await supabase
+            .from("user_profiles")
+            .select("full_name")
+            .eq("id", user.id)
+            .single();
+
+        const customerName = profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Customer";
+        const customerEmail = user.email || "";
         const amount = payment.amount;
         const currency = "USD"; // Default to USD for now
         const paymentDate = new Date(payment.created_at);
@@ -64,7 +65,7 @@ export async function GET(req: NextRequest) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SyncFlo AI - Invoice ${invoiceNumber}</title>
+    <title>Aviso - Invoice ${invoiceNumber}</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Inter font -->
@@ -116,8 +117,8 @@ export async function GET(req: NextRequest) {
             <!-- Bill From: SyncFlo AI -->
             <div>
                 <h2 class="text-sm font-semibold text-gray-500 uppercase mb-3">From</h2>
-                <p class="font-bold text-lg text-gray-900">SyncFlo AI</p>
-                <p class="text-gray-600">South City Garden</p>
+                <p class="font-bold text-lg text-gray-900">Aviso</p>
+                <p class="text-gray-600">SyncFlo AI</p>
                 <p class="text-gray-600">Kol 700053</p>
                 <p class="text-gray-600">contact@syncflo.xyz</p>
             </div>

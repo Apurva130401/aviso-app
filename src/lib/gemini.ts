@@ -37,7 +37,7 @@ export const analyzeBrand = async (url: string, goal?: string, additionalContext
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-lite-latest",
         contents: prompt,
         config: {
             tools: [{ urlContext: {} }],
@@ -76,7 +76,7 @@ export const generateToneOptions = async (analysis: BrandAnalysis): Promise<stri
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-lite-latest",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -119,7 +119,7 @@ export const generateFinalAds = async (
   `;
 
     const textResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-lite-latest",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -168,7 +168,7 @@ export const generateFinalAds = async (
 export const refineContent = async (originalContent: string, refinementPrompt: string): Promise<string> => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-lite-latest",
         contents: `Original Content: ${originalContent}\n\nRefinement Request: ${refinementPrompt}\n\nRewrite the content based on the request. Return ONLY the rewritten text.`,
     });
     return response.text || originalContent;
