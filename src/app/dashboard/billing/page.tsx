@@ -16,10 +16,12 @@ export default function BillingPage() {
     const searchParams = useSearchParams();
 
     const [profile, setProfile] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
     const [invoices, setInvoices] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
 
-    // For when they return from checkout
+    const success = searchParams.get('success');
+    const creditsAddedParam = searchParams.get('credits');
     const [showSuccess, setShowSuccess] = useState(false);
     const [creditsAdded, setCreditsAdded] = useState(0);
     const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
@@ -44,10 +46,12 @@ export default function BillingPage() {
 
     useEffect(() => {
         loadData();
+    }, []);
 
+    useEffect(() => {
         // Check if returning from a successful checkout
-        if (searchParams.get("success") === "true") {
-            const added = Number(searchParams.get("credits"));
+        if (success === "true") {
+            const added = Number(creditsAddedParam);
             if (added) {
                 setCreditsAdded(added);
                 setShowSuccess(true);
@@ -55,7 +59,42 @@ export default function BillingPage() {
             // Clean up URL
             window.history.replaceState({}, '', '/dashboard/billing');
         }
-    }, [searchParams]);
+    }, [searchParams, success, creditsAddedParam]);
+
+    const handleDownloadInvoice = async (paymentId: string) => {
+        try {
+            setDownloadingInvoice(paymentId);
+            const res = await fetch(`/api/view-invoice?paymentId=${paymentId}`);
+            if (!res.ok) {
+                alert("Failed to load invoice");
+                return;
+            }
+
+            const htmlContent = await res.text();
+
+            // Open blank tab and write dynamic HTML
+            const newWindow = window.open('', '_blank');
+            if (newWindow) {
+                newWindow.document.write(htmlContent);
+                newWindow.document.close();
+            } else {
+                alert("Please allow popups to view your invoice.");
+            }
+        } catch (error) {
+            console.error("Download Error:", error);
+            alert("Error downloading invoice.");
+        } finally {
+            setDownloadingInvoice(null);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen w-full">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     const topUpPackages = Object.values(packages);
 
@@ -296,8 +335,18 @@ export default function BillingPage() {
                                             </span>
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <Button variant="ghost" size="sm" className="h-10 w-10 p-0 text-white/20 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-                                                <Download size={16} />
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDownloadInvoice(inv.id)}
+                                                disabled={downloadingInvoice === inv.id}
+                                                className="h-10 w-10 p-0 text-white/20 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                                            >
+                                                {downloadingInvoice === inv.id ? (
+                                                    <Loader2 size={16} className="animate-spin" />
+                                                ) : (
+                                                    <Download size={16} />
+                                                )}
                                             </Button>
                                         </td>
                                     </tr>
