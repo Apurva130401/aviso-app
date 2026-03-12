@@ -172,7 +172,7 @@ export default function HistoryPage() {
                             </div>
                             <div className="p-4 rounded-[20px] bg-white/5 border border-white/5">
                                 <span className="text-[9px] font-black uppercase tracking-widest text-white/20 block mb-1">Neural Path</span>
-                                <span className="text-xs font-black text-accent italic uppercase tracking-widest">{selectedCampaign.tone}</span>
+                                <span className="text-xs font-black text-accent italic uppercase tracking-widest">{selectedCampaign.tone || 'No Path'}</span>
                             </div>
                         </div>
 

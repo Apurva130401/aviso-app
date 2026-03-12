@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from "motion/react";
 import {
     Globe, Target, Zap, Megaphone, Facebook, Search, Linkedin, Twitter,
     ArrowRight, Loader2, CheckCircle2, ChevronRight, Layout,
-    Palette, MessageSquare, ArrowLeft, RefreshCcw, Instagram, Plus
+    Palette, MessageSquare, ArrowLeft, RefreshCcw, Instagram, Plus, Minus, Image
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { LowCreditAlert } from "@/components/ui/LowCreditAlert";
+import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { analyzeBrandAction, generateTonesAction, generateAdsAction } from "@/app/actions";
 import { BrandAnalysis } from "@/lib/gemini";
 import { cn } from "@/lib/utils";
@@ -23,11 +25,14 @@ export default function CreateCampaignPage() {
     const [goal, setGoal] = useState("");
     const [context, setContext] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Configuration
+    const [showError, setShowError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [showLowCredit, setShowLowCredit] = useState(false);
     const [platforms, setPlatforms] = useState<string[]>(["facebook", "instagram", "google"]);
     const [includeImages, setIncludeImages] = useState(true);
+    const [imageCount, setImageCount] = useState(1);
+
+    const totalCredits = 2 + (includeImages ? imageCount * 10 : 0);
 
     // Step Data
     const [analysis, setAnalysis] = useState<BrandAnalysis | null>(null);
@@ -40,14 +45,18 @@ export default function CreateCampaignPage() {
         e.preventDefault();
         if (!url) return;
         setLoading(true);
-        setError(null);
         const result = await analyzeBrandAction(url, goal, context);
         if (result.success) {
             setAnalysis(result.data!);
             setCampaignId(result.campaignId!);
             setStep("analysis");
         } else {
-            setError(result.error!);
+            if (result.error === "CREDITS_EXHAUSTED") {
+                setShowLowCredit(true);
+            } else {
+                setErrorMessage(result.error || "Something went wrong while analyzing the brand. Our model hit a snag.");
+                setShowError(true);
+            }
         }
         setLoading(false);
     };
@@ -60,7 +69,8 @@ export default function CreateCampaignPage() {
             setToneOptions(result.data!);
             setStep("tone-selection");
         } else {
-            setError(result.error!);
+            setErrorMessage(result.error || "The tone generation engine ran into an issue.");
+            setShowError(true);
         }
         setLoading(false);
     };
@@ -68,12 +78,17 @@ export default function CreateCampaignPage() {
     const handleGenerateAds = async (tone: string) => {
         setSelectedTone(tone);
         setLoading(true);
-        const result = await generateAdsAction(analysis!, tone, platforms, {}, includeImages, campaignId!);
+        const result = await generateAdsAction(analysis!, tone, platforms, {}, includeImages, campaignId!, imageCount);
         if (result.success) {
             setFinalAds(result.data!);
             setStep("final-ads");
         } else {
-            setError(result.error!);
+            if (result.error === "CREDITS_EXHAUSTED") {
+                setShowLowCredit(true);
+            } else {
+                setErrorMessage(result.error || "The ad synthesizer encountered an error during generation.");
+                setShowError(true);
+            }
         }
         setLoading(false);
     };
@@ -182,7 +197,10 @@ export default function CreateCampaignPage() {
 
                                 <div className="space-y-4">
                                     <label className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/[0.05] cursor-pointer group hover:bg-white/5 transition-colors">
-                                        <span className="text-[11px] font-bold text-white/60 group-hover:text-white uppercase tracking-widest">AI Generated Visuals</span>
+                                        <div className="flex items-center gap-3">
+                                            <Image className="w-4 h-4 text-white/30" strokeWidth={1.5} />
+                                            <span className="text-[11px] font-bold text-white/60 group-hover:text-white uppercase tracking-widest">AI Generated Visuals</span>
+                                        </div>
                                         <div
                                             onClick={() => setIncludeImages(!includeImages)}
                                             className={cn("w-10 h-5 rounded-full p-1 transition-all flex items-center shadow-inner relative overflow-hidden", includeImages ? "bg-accent" : "bg-white/5")}
@@ -190,6 +208,49 @@ export default function CreateCampaignPage() {
                                             <div className={cn("w-3 h-3 bg-white rounded-full transition-all shadow-xl z-10", includeImages ? "translate-x-5" : "translate-x-0")} />
                                         </div>
                                     </label>
+
+                                    <AnimatePresence>
+                                    {includeImages && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-between gap-4">
+                                                <div>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Image Count</p>
+                                                    <p className="text-[9px] text-white/20 mt-0.5">10 credits per image</p>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setImageCount(c => Math.max(1, c - 1))}
+                                                        className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all"
+                                                    >
+                                                        <Minus className="w-3 h-3" />
+                                                    </button>
+                                                    <span className="text-base font-black text-white w-4 text-center">{imageCount}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setImageCount(c => Math.min(5, c + 1))}
+                                                        className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all"
+                                                    >
+                                                        <Plus className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                                <motion.div
+                                                    key={totalCredits}
+                                                    initial={{ scale: 0.85, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    className="px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20"
+                                                >
+                                                    <span className="text-[11px] font-black text-accent">{totalCredits} cr</span>
+                                                </motion.div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                    </AnimatePresence>
 
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-white/20 uppercase tracking-widest ml-1">Target Platforms</label>
@@ -396,13 +457,16 @@ export default function CreateCampaignPage() {
                                         </div>
 
                                         {/* Visual/Image Mockup Area */}
-                                        <div className="aspect-square bg-white/[0.03] relative overflow-hidden group/img">
+                                        <div className={cn(
+                                            "bg-white/[0.03] relative overflow-hidden group/img transition-all duration-500",
+                                            finalAds.adImage ? "aspect-square" : "min-h-[140px] flex items-center justify-center p-8"
+                                        )}>
                                             {finalAds.adImage ? (
                                                 <img src={finalAds.adImage} alt="Neural Creative" className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105" />
                                             ) : (
-                                                <div className="w-full h-full flex flex-col items-center justify-center p-12 text-center space-y-4">
-                                                    <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-white/10">
-                                                        <Layout className="w-8 h-8" />
+                                                <div className="w-full h-full flex flex-col items-center justify-center text-center space-y-3">
+                                                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/10 group-hover:bg-white/10 transition-colors">
+                                                        <Layout className="w-6 h-6" />
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">No Visual Assets</p>
@@ -485,6 +549,17 @@ export default function CreateCampaignPage() {
                     </div>
                 </motion.div>
             )}
+
+            <LowCreditAlert
+                isOpen={showLowCredit}
+                onClose={() => setShowLowCredit(false)}
+                requiredCredits={totalCredits}
+            />
+            <ErrorAlert
+                isOpen={showError}
+                onClose={() => setShowError(false)}
+                message={errorMessage || undefined}
+            />
         </AnimatePresence>
     );
 }

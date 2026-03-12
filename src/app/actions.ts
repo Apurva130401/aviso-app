@@ -35,6 +35,7 @@ export async function analyzeBrandAction(url: string, goal?: string, context?: s
                 goal,
                 context,
                 status: "analyzed",
+                tone: "Balanced",
                 analysis_data: analysis
             })
             .select()
@@ -66,7 +67,8 @@ export async function generateAdsAction(
     platforms: string[],
     settings: Record<string, string[]>,
     includeImages: boolean,
-    campaignId?: string
+    campaignId?: string,
+    imageCount: number = 1
 ) {
     try {
         const supabase = await createClient();
@@ -74,15 +76,15 @@ export async function generateAdsAction(
 
         if (!user) throw new Error("Unauthorized");
 
-        // Credit Guard (Text = 2, Text+Image = 42)
-        const creditCost = includeImages ? 42 : 2;
+        // Credit Guard (Text = 2, Text+Image = 2 + imageCount * 10)
+        const creditCost = includeImages ? 2 + (imageCount * 10) : 2;
         const { data: profile } = await supabase.from("user_profiles").select("credits_total, credits_used").eq("id", user.id).single();
 
         if (profile && (profile.credits_total - profile.credits_used < creditCost)) {
             return { success: false, error: "CREDITS_EXHAUSTED", message: "Insufficient credits. Please top up." };
         }
 
-        const ads = await generateFinalAds(analysis, tone, platforms, settings, includeImages);
+        const ads = await generateFinalAds(analysis, tone, platforms, settings, includeImages, imageCount);
 
         // Deduct Credit upon successful generation
         if (profile) {
@@ -116,11 +118,18 @@ export async function generateAdsAction(
 
             if (assetError) console.error("Asset Storage Error:", assetError);
 
-            // Update campaign status
-            await supabase
+            // Update campaign status and tone
+            const { error: updateError } = await supabase
                 .from("campaigns")
-                .update({ status: "completed" })
+                .update({
+                    status: "completed",
+                    tone: tone
+                })
                 .eq("id", campaignId);
+
+            if (updateError) {
+                console.error("Campaign Update Error (Status/Tone):", updateError);
+            }
         }
 
         revalidatePath("/dashboard/assets");
@@ -300,5 +309,51 @@ export async function getPaymentHistoryAction() {
     } catch (error) {
         console.error("History Error:", error);
         return { success: false, error: "Failed to fetch payment history." };
+    }
+}
+export async function getCampaignVelocityAction(days: number = 30) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Unauthorized");
+
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        const startDateStr = startDate.toISOString();
+
+        const { data, error } = await supabase
+            .from("campaigns")
+            .select("created_at")
+            .eq("user_id", user.id)
+            .gte("created_at", startDateStr)
+            .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        // Group by day
+        const dailyCounts: Record<string, number> = {};
+
+        // Initialize all days in range with 0
+        for (let i = 0; i <= days; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            dailyCounts[date.toISOString().split('T')[0]] = 0;
+        }
+
+        data.forEach(c => {
+            const dateStr = new Date(c.created_at).toISOString().split('T')[0];
+            if (dailyCounts[dateStr] !== undefined) {
+                dailyCounts[dateStr]++;
+            }
+        });
+
+        const chartData = Object.entries(dailyCounts)
+            .map(([date, count]) => ({ date, count }))
+            .sort((a, b) => a.date.localeCompare(b.date));
+
+        return { success: true, data: chartData };
+    } catch (error) {
+        console.error("Velocity Error:", error);
+        return { success: false, error: "Failed to fetch velocity data." };
     }
 }

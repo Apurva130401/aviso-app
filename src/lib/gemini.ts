@@ -21,9 +21,37 @@ export interface AdVariant {
 export const analyzeBrand = async (url: string, goal?: string, additionalContext?: string): Promise<BrandAnalysis> => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
+    // Initialize Firecrawl
+    const FirecrawlApp = (await import("@mendable/firecrawl-js")).default;
+    const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
+    let scrapedMarkdown = "Unable to scrape website content.";
+
+    try {
+        console.log(`[Firecrawl] Scraping URL: ${url}`);
+        const scrapeResult = await app.scrape(url, {
+            formats: ["markdown"],
+            onlyMainContent: true,
+        });
+
+        if (scrapeResult && scrapeResult.markdown) {
+            scrapedMarkdown = scrapeResult.markdown;
+            console.log(`[Firecrawl] Successfully scraped ${scrapedMarkdown.length} characters.`);
+        } else {
+            console.warn(`[Firecrawl] Scrape completed but no markdown was returned.`);
+        }
+    } catch (e) {
+        console.error(`[Firecrawl] Exception during scrape:`, e);
+    }
+
     const prompt = `
     Act as an elite Brand Strategist and Marketing Psychologist.
     Analyze the website at ${url}.
+    
+    Here is the scraped content of the website to base your analysis on:
+    ---
+    ${scrapedMarkdown}
+    ---
+    
     ${goal ? `Campaign Goal: ${goal}` : ""}
     ${additionalContext ? `Additional Context: ${additionalContext}` : ""}
     
@@ -97,7 +125,8 @@ export const generateFinalAds = async (
     selectedTone: string,
     platforms: string[],
     settings: Record<string, string[]>,
-    includeImages: boolean
+    includeImages: boolean,
+    imageCount: number = 1
 ) => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
@@ -124,7 +153,7 @@ export const generateFinalAds = async (
     ### Platforms and requested fields:
     ${platforms.map(p => `- ${p}: ${(settings[p] || ["all"]).join(", ")}`).join("\n")}
     
-    For each platform, provide 2 variants.
+    For each platform, provide 1 high-quality variant.
     - facebook: Primary Text (sophisticated & persuasive), Headline (benefit-focused), CTA
     - instagram: Primary Text (social-first, hook-driven), Headline, CTA
     - google: 3 Headlines (dynamic & relevant), 2 Descriptions (feature-to-benefit mapping)
@@ -134,6 +163,22 @@ export const generateFinalAds = async (
     Return as JSON.
     `;
 
+    // Build dynamic properties for response schema based on platforms
+    const platformSchemaMap: Record<string, any> = {
+        facebook: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { primaryText: { type: Type.STRING }, headline: { type: Type.STRING }, cta: { type: Type.STRING } } }, maxItems: 1 },
+        instagram: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { primaryText: { type: Type.STRING }, headline: { type: Type.STRING }, cta: { type: Type.STRING } } }, maxItems: 1 },
+        google: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { headlines: { type: Type.ARRAY, items: { type: Type.STRING } }, descriptions: { type: Type.ARRAY, items: { type: Type.STRING } } } }, maxItems: 1 },
+        twitter: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { postContent: { type: Type.STRING } } }, maxItems: 1 },
+        linkedin: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { postContent: { type: Type.STRING } } }, maxItems: 1 },
+    };
+
+    const properties: Record<string, any> = {};
+    platforms.forEach(p => {
+        if (platformSchemaMap[p]) {
+            properties[p] = platformSchemaMap[p];
+        }
+    });
+
     const textResponse = await ai.models.generateContent({
         model: "gemini-flash-lite-latest",
         contents: prompt,
@@ -141,13 +186,7 @@ export const generateFinalAds = async (
             responseMimeType: "application/json",
             responseSchema: {
                 type: Type.OBJECT,
-                properties: {
-                    facebook: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { primaryText: { type: Type.STRING }, headline: { type: Type.STRING }, cta: { type: Type.STRING } } } },
-                    instagram: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { primaryText: { type: Type.STRING }, headline: { type: Type.STRING }, cta: { type: Type.STRING } } } },
-                    google: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { headlines: { type: Type.ARRAY, items: { type: Type.STRING } }, descriptions: { type: Type.ARRAY, items: { type: Type.STRING } } } } },
-                    twitter: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { postContent: { type: Type.STRING } } } },
-                    linkedin: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { postContent: { type: Type.STRING } } } },
-                }
+                properties
             },
         },
     });
@@ -169,17 +208,29 @@ export const generateFinalAds = async (
     No text. Cinematic lighting, modern aesthetic.`;
 
         try {
-            const imageResponse = await ai.models.generateContent({
-                model: "gemini-3-pro-image-preview",
-                contents: [{ text: imagePrompt }],
-                config: { imageConfig: { aspectRatio: "1:1" } }
-            });
+            const imagePromises = Array.from({ length: imageCount }, () =>
+                ai.models.generateContent({
+                    model: "gemini-3-pro-image-preview",
+                    contents: [{ text: imagePrompt }],
+                    config: { imageConfig: { aspectRatio: "1:1" } }
+                })
+            );
 
-            for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
-                if (part.inlineData) {
-                    result.adImage = `data:image/png;base64,${part.inlineData.data}`;
-                    break;
+            const imageResponses = await Promise.all(imagePromises);
+            const adImages: string[] = [];
+
+            for (const imageResponse of imageResponses) {
+                for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
+                    if (part.inlineData) {
+                        adImages.push(`data:image/png;base64,${part.inlineData.data}`);
+                        break;
+                    }
                 }
+            }
+
+            if (adImages.length > 0) {
+                result.adImages = adImages;
+                result.adImage = adImages[0]; // keep backwards compat
             }
         } catch (err) {
             console.error("Image generation failed:", err);
